@@ -551,7 +551,7 @@ private:
 执行一下操作
 
 ```c++
-bool validateStudent(const Student& s);
+bool validateStudent(Student s);
 Student plato;
 bool platoIsOk = validateStudent(plato);
 ```
@@ -564,6 +564,62 @@ bool platoIsOk = validateStudent(plato);
 
 故总成本是“六次构造函数和六次析构函数”！
 
+**pass by reference-to-const** 可以避免构造和析构动作：
+
+```c++
+bool validateStudent(const Student& s);
+```
+
+- 这种传递方式将不会有构造和析构被调用，以为没有任何新对象被创建。加上 const 是必要的，这样可以防止 Student 被修改。
+- 以 by reference 方式传递参数也可以避免 slicing（对象切割问题），即实现多态的过程。
+
+考虑这个例子：base 类 Window 和 derived class 类 WindowWithScrollBars 有不同的显示函数 display() 。
+
+```c++
+class Window {
+public:
+	string name() const;               //返回窗口名称
+	virtual void display() const;      //显示窗口和其内容
+};
+
+class WindowWithScrollBars :public Window {
+public:
+	virtual void display() const;
+};
+
+```
+
+现有一个打印窗口函数，如下：
+
+```c++
+void printNameAndDisplay(Window w)
+{
+	cout << w.name();
+	w.display();
+}
+```
+
+执行如下语句：
+
+```c++
+WindowWithScrollBars wwsb;
+printNameAndDisplay(wwsb);
+```
+
+这时参数回构造一个 Window 对象而不是 WindowWithScrollBars 对象。解决办法 **pass by reference-to-const**。
+
+```c++
+void printNameAndDisplay(const Window& w)
+```
+
+现在传进来什么类型就打印什么类型。
+
+rederence的底层实现是一个指针常量，因此 pass by reference 通常意味着真正传递的是指针。因此对于内置类型（如 int ），pass by value 往往比 pass by reference 更高效些。
+
+## 总结：
+
+- 尽量以 pass-by-reference-const 替换 pass-by-value。前者通常比较高效，并可避免切割问题（slicing problem）。
+- 以上规则并不适用于内置类型，以及 STL 的迭代器和函数对象。对它们而言，pass-by-value 往往比较合适。
 
 
 
@@ -575,6 +631,7 @@ bool platoIsOk = validateStudent(plato);
 
 
 
+ 
 
 
 
