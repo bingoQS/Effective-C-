@@ -512,9 +512,57 @@ private:
 
 **Prefer pass-by-reference-to-const to pass-by-value.**
 
+缺省情况下C++以 by value 方式传递至函数。除非你另外指定，**否则函数参数都是以实际实参的复件为初值，而调用端所获得的亦是函数返回值的一个复件**。这些复件由对象的 copy 构造函数产出，这可能使得 **pass-by-value 成为昂贵的（费时的）**操作。
 
+一个例子：
 
+```c++
+class Person {
+public:
+	Person(){}
+	Person(string name,string address):m_name(name),m_address(address) {
 
+	}
+	virtual ~Person() {
+
+	}
+
+private:
+	string m_name;
+	string m_address;
+};
+
+class Student :public Person {
+public:
+	Student(){}
+	Student(string schoolName,string schoolAddress):m_schoolName(schoolName),m_schoolAddress(schoolAddress) {
+
+	}
+	~Student() {
+
+	}
+
+private:
+	string m_schoolName;
+	string m_schoolAddress;
+};
+```
+
+执行一下操作
+
+```c++
+bool validateStudent(const Student& s);
+Student plato;
+bool platoIsOk = validateStudent(plato);
+```
+
+调用 validateStudent(const Student& s) 函数发生了哪些过程？
+
+对函数而言，copy 构造函数被调用一次，当函数结束返回 s 将被销毁，即参数的传递成本是“一次 Student Copy 构造函数调用，加上一次 Student 构造函数调用”。
+
+表面上确实如此，但不完整。Student 有两个 string 对象，所以每次构造一个 Student 就会构造两个 string。此外还继承了 Person，所以每次构造一个 Student 就会构造一个 Person，每构造一次 Person 又会构造两次 string。
+
+故总成本是“六次构造函数和六次析构函数”！
 
 
 
