@@ -652,7 +652,7 @@ rederence的底层实现是一个指针常量，因此 pass by reference 通常�
 ## 总结：
 
 - 尽量以 pass-by-reference-const 替换 pass-by-value。前者通常比较高效，并可避免切割问题（slicing problem）。
-- 以上规则并不适用于内置类型，以及 STL 的迭代器和函数对象。对它们而言，pass-by-value 往往比较合适。
+- 以上规则并**不适用于内置类型**，以及 STL 的迭代器和函数对象。对它们而言，**pass-by-value 往往比较合适**。
 
 ## 条款21：必须返回对象时，别妄想返回其 reference
 
@@ -662,9 +662,23 @@ rederence的底层实现是一个指针常量，因此 pass by reference 通常�
 
 - 绝不要返回 pointer 或 reference 指向一个 local stack 对象，或返回 reference 指向一个 heap-allocated 对象，或返回 pointer 或 reference 指向一个 local static 对象而有可能同时需要多个这样的对象。条款 4 已经为 “单线程环境中合理返回 reference 指向一个 local static 对象” 提供了一份实例。
 
+## 条款22：将成员变量声明为 private
 
+**Declare data members private.**
 
+### 理由：
 
+- **从语法的一致性来说**，如果成员变量声明为 private，客户唯一嫩访问成员变量的方式就是 public 的成员函数。从此客户就不需要为要不要加“（）”感到烦恼。
+- **封装的角度来说**，如果你通过函数访问成员变量，日后可改以某个计算替换这个成员变量，而 class 客户一点也不会知道 class 的内部实现已经起了变化。**成员变量的封装性与 “成员变量的内容改变时所破坏的代码数量” 成反比。**
+
+### 请记住：
+
+- 切记将成员变量声明为 private。这可赋予访问数据的一致性、可细微划分访问控制、允诺约束条件获得保证，并提供 class 作者以充分的实现弹性。
+- protected 并不比 public 更具封装性。
+
+## 条款 23：宁以 non-member、non-friend 替换 member 函数
+
+**Perfer non-member non-friend functions to member functions.**
 
 
 
