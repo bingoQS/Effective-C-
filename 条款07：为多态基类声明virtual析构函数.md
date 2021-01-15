@@ -680,11 +680,81 @@ rederence的底层实现是一个指针常量，因此 pass by reference 通常�
 
 **Perfer non-member non-friend functions to member functions.**
 
+一个例子: 假设一个网页浏览器的类。
+
+```c++
+class WebBrowser {
+public:
+	void clearCache();          //清除下载元素高速缓存去
+	void clearHistory();        //清除历史记录
+	void removeCookies();       //移除 cookies
+
+	void clearEverything();     //方法一：调用上面三个函数
+};
+
+//方法二：或者由一个 non-member 函数而提供出来 
+void clearBrowser(WebBrowser& wb)
+{
+	wb.clearCache();
+	wb.clearHistory();
+	wb.removeCookies();
+}
+```
+
+ member 函数 clearEverything() 带来的封装性比 non-member 函数 clearBrowser() 低。此外，提供 non-member 函数可允许 WebBrowser 相关技能有较大的包裹弹性，而那最终导致较低的编译依赖度。
+
+原因：
+
+**从封装性开始讨论**。如果某些东西被封装，它就不可见。越多东西被封装，那么越少人可以看到它。而越少人看到它，我们就有越大的弹性去改变它，因为我们的改变仅仅能影响能看到改变的那些人。**因此，越多东西被封装，我们改变哪些东西的能力就越大。**
+
+现在考虑对象内的数据。**如果越多的数据被封装，那么越少代码可以看到数据（访问它），那我们就能越多的改变对象数据。**
+
+**如果要你在一个 member 函数和一个 non-member, non-friend 函数之间选择，而且两种提供相同的机能，那么导致较大封装性的是 non-member, non-friend 函数，因为它们不可以访问 class 的 private 成员变量。**
 
 
 
+### 注意要点
 
- 
+1. 这个论述只适用于 **non-member non-firend 函数**。firend 函数对 class private 成员的访问权力和 member 函数相同，因此两者针对封装的力道也相同。
+2. 只因在一封装性而让函数 “成为 class 的 non-member”，并不意味着它 “不可以是另一个 class 的 member”。
+
+c++中，比较自然的做法是让 clearBrowser 成为一个 non-member 函数并且位于 WebBrowser 所在的同一个 namespace 内：
+
+```c++
+namespace WebBrowserStuff{
+    class WebBrowser{ ... };
+    void clearBrowser(WebBrowser& wb){};
+    ...
+}
+```
+
+然而这不只是看起来正常，要知道，namespace 和 class 不同，前者可以跨越多个源码文件而后者不行。这很重要，因为像 clearBrowser 这样的函数是个 “提供便利的函数” , 如果它既不是 members 也不是 friends， 就没有对 WebBrowser 的特殊访问权力，也就不能提供 “WebBrowser 客户无法以其他方式取得” 的机能。
+
+一个像 WebBrowser 这样的 class 可能拥有大量便利函数，某些与书签（bookMarks）有关，某些与打印有关，还有与 cookie 的管理有关 ... ... 通常大多数客户只对其中某些感兴趣。**那么，可以将感兴趣的便利函数声明在一个文件里，将其他便利函数声明在另一个头文件里。**
+
+```c++
+//头文件 “webbrowser.h” 这个头文件针对 class WebBrowser 自身
+//及 WebBrowser 核心机能
+namespace WebBrowserStuff{
+    class WebBrowser{ ... };
+}
+
+// 头文件 "webbrowserbookmarks.h"
+namespace WebBrowserStuff{
+    ...              //与书签相关遍历函数
+}
+
+// 头文件 "webbrowser *** .h"
+namespace WebBrowserStuff{
+    ...              //其他相关遍历函数
+}
+```
+
+
+
+ ## 请记住
+
+- 宁可拿 non-member non-friend 函数替换 member 函数。这样做可以增加封装性、包裹弹性（packaging flexibility）和技能扩充性。
 
 
 
