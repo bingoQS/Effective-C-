@@ -10,6 +10,78 @@
 
 ​                              **Use const whenever possible**
 
+- const 成员函数
+
+将const 实施于成员函数的目的，是为了确认该成员函数可作用于 const 对象身上。
+
+有两个作用：
+
+​       1、使 class 接口比较容易被理解。（哪个函数可以改动对象，哪个函数不行）
+
+​       2、使 “操作 const 对象” 成为可能。
+
+**const 可以作为重载的条件。**
+
+```c++
+class TextBlock {
+public:
+	const char& operator[](size_t position)const {
+		return text[position];
+	}
+	char& operator[](size_t position) {
+		return text[position];
+	}
+private:
+	string text;
+};
+TextBlock tb("Hello");
+cout << tb[0];
+
+const TextBlock ctb("World");
+cout << ctb[0];              
+
+int main(){
+    tb[0] = ‘x’;
+
+	ctb[0] = ‘x’;              //编译不通过,const类型不可修改
+    
+    return 0；
+}，
+```
+
+也请注意，non-const operaor[] 的返回类型是一个 reference to char, 不是 char。如果 operaor[] 返回一个 char，下面这样的语句也不能通过编译：
+
+```c++
+tb[0] = ‘x’;
+```
+
+那是因为，如果函数的返回类型是个内置类型，那么改动函数返回值从来就是不合法。纵使合法， C++ 以 by value 返回对象这一事实意味着被改动的其实是 tb.text[0] 的一个副本，不是 tb.text[0] 自身。
+
+
+
+**bitwise constness 和 logical consness**
+
+bitwise constness：成员函数只有在不更改对象之任何成员变量（static 变量除外）时可以说是 const。也就是说它不可以更改对象内任何一个 bit。但如果返回的是一个指针或者引用，那么存在潜在的改变情况，如下：
+
+```c++
+class CTextBlock {
+public:
+	char& operator[](size_t position) const  //**bitwise const 声明
+    {
+		return pText[position];           //但其实不适当
+	}
+private:
+	char* pText;
+};
+const CTextBlock cctb("Hello");
+char* pc = &tb[0];
+*pc = 'j';           //现在改变了 pText
+```
+
+
+
+mutable 关键字。
+
 ## 条款04：确定对象被使用前已先被初始化
 
 ​                                **Make sure that objects are initialized before thay’are used.**
@@ -758,7 +830,42 @@ namespace WebBrowserStuff{
 
 
 
+## 24：若所有参数皆需类型转换，请采用 non-member 函数
 
+**Declare non-member functions when type conversion should apply to all parameters. **
+
+**令 classes 支持隐式类型转换是个馊主意。**
+
+```c++
+class Rational {
+	public:
+		Rational(int numerator = 0, int demominator = 1):numerat(numerator),denominat(demominator) {}
+		int numerator() const{ return numerat;}
+		int denominator() const { return denominat; }
+
+		const Rational operator*(const Rational& rhs)const; //条款3，20，21
+
+    private:
+		int numerat;
+		int denominat;
+};
+```
+
+这个例子能够实现两个对象的相乘，但不支持混合运算。如：
+
+```cc
+result = oneHalf * 2;  //很好
+result = 2 * oneHalf;  //错误
+```
+
+
+
+携程完整形式
+
+```c++
+result = oneHalf.operator*(2);  //很好
+result = 2.operator*(oneHalf);  //错误
+```
 
 
 
